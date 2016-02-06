@@ -112,7 +112,14 @@ module Amb
       @__num_of_tries ||= 1
       @__num_of_tries += 1
     end
-    back_amb.pop.call
+    $ARS.each do |ar|
+      if ar.respond_to? :errors then
+        ar.errors.clear
+      end
+    end
+    cont = back_amb.pop
+    cont.call unless cont.nil?
+    nil
   end
 
   # Assert the given condition is true. If the condition is false,
