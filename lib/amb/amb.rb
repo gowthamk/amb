@@ -90,13 +90,30 @@ module Amb
   # @param choices
   #
   def choose(*choices)
-    choices.each do |choice|
-      callcc do |fk|
-        back_amb << fk
-        return choice
-      end
+    if choices.empty? then
+      fail "Choices are empty!"
     end
-    failure
+    tl_choice = choices.last
+    hd_choices = choices.take(choices.length - 1)
+    hd_choices.each do |choice|
+      if Process.fork.nil? then
+        return choice
+      else
+        Process.wait
+      end
+=begin
+      callcc do |fk|
+        #back_amb << fk
+        #return choice
+        Process.fork do
+          puts "child, pid #{Process.pid} exploring path #{choice}"
+          fk.call choice
+        end
+        Process.wait
+      end
+=end
+    end
+    tl_choice
   end
   alias :choices :choose
   alias :alternatives :choose
@@ -108,6 +125,7 @@ module Amb
   # @TODO it'd be better not to have to
   #
   def failure
+    Process.exit
     if $DEBUG
       @__num_of_tries ||= 1
       @__num_of_tries += 1

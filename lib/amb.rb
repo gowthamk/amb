@@ -1,2 +1,2 @@
-require 'amb/amb'
-require 'amb/amb_operator'
+require_relative 'amb/amb'
+require_relative 'amb/amb_operator'
