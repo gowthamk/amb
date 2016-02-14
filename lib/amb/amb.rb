@@ -89,17 +89,22 @@ module Amb
   #
   # @param choices
   #
-  def choose(*choices)
-    if choices.empty? then
-      fail "Choices are empty!"
-    end
+  def choose(test,*choices)
+    fail "Test not given for amb.choose!" if !(String===test)
+    fail "Choices are empty!" if choices.empty?
+    ca = ConflictAnalysis
     tl_choice = choices.last
     hd_choices = choices.take(choices.length - 1)
     hd_choices.each do |choice|
+      #ca.tracer.info "Indent before forking: #{ca.tracer.indent}"
       if Process.fork.nil? then
+        ca.trace(:if,test,choice)
         return choice
       else
+        #ca.tracer.info "Indent before waiting in parent: #{ca.tracer.indent}"
         Process.wait
+        #ca.tracer.info "Indent after waiting in parent: #{ca.tracer.indent}"
+        ca.trace(:else)
       end
 =begin
       callcc do |fk|
@@ -125,19 +130,8 @@ module Amb
   # @TODO it'd be better not to have to
   #
   def failure
+    ConflictAnalysis.tracer.end_all
     Process.exit
-    if $DEBUG
-      @__num_of_tries ||= 1
-      @__num_of_tries += 1
-    end
-    $ARS.each do |ar|
-      if ar.respond_to? :errors then
-        ar.errors.clear
-      end
-    end
-    cont = back_amb.pop
-    cont.call unless cont.nil?
-    nil
   end
 
   # Assert the given condition is true. If the condition is false,
