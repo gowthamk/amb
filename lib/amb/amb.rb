@@ -98,7 +98,7 @@ module Amb
     hd_choices.each do |choice|
       #ca.tracer.info "Indent before forking: #{ca.tracer.indent}"
       if Process.fork.nil? then
-        ca.tracer.mark_indent
+        ca.tracer.mark_indent_for_if
         at_exit do
           ca.tracer.end_all
         end
