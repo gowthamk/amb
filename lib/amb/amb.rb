@@ -90,7 +90,7 @@ module Amb
   # @param choices
   #
   def choose(test,*choices)
-    fail "Test not given for amb.choose!" if !(String===test)
+    #fail "Test not given for amb.choose!" if !(TraceAST.a_si(test))
     fail "Choices are empty!" if choices.empty?
     ca = ConflictAnalysis
     tl_choice = choices.last
@@ -98,13 +98,18 @@ module Amb
     hd_choices.each do |choice|
       #ca.tracer.info "Indent before forking: #{ca.tracer.indent}"
       if Process.fork.nil? then
-        ca.trace(:if,test,choice)
+        ca.tracer.mark_indent
+        at_exit do
+          ca.tracer.end_all
+        end
+        cond = TraceAST::BoolOp.new(test,"==",choice)
+        ca.trace(TraceAST::If.new(cond))
         return choice
       else
         #ca.tracer.info "Indent before waiting in parent: #{ca.tracer.indent}"
         Process.wait
         #ca.tracer.info "Indent after waiting in parent: #{ca.tracer.indent}"
-        ca.trace(:else)
+        ca.trace(TraceAST::Else.new)
       end
 =begin
       callcc do |fk|
@@ -130,8 +135,8 @@ module Amb
   # @TODO it'd be better not to have to
   #
   def failure
-    ConflictAnalysis.tracer.end_all
-    Process.exit
+    #ConflictAnalysis.tracer.end_all
+    #Process.exit
   end
 
   # Assert the given condition is true. If the condition is false,
